@@ -1,9 +1,10 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,11 +30,11 @@ export default function Navbar() {
   
   const isActive = (path: string) => location.pathname === path;
 
+  // ✅ REMOVED PROFILE FROM NAVBAR
   const navLinks = [
     { to: '/services', label: 'Services', activeGradient: 'from-[#0AD1C8] to-[#429EBD]' },
     { to: '/map', label: 'Map', activeGradient: 'from-[#0AD1C8] to-[#429EBD]' },
-    { to: '/report', label: 'Report', activeGradient: 'from-[#F7AD19] to-[#FF8C42]' },
-    { to: '/profile', label: 'Profile', activeGradient: 'from-[#0AD1C8] to-[#429EBD]' }
+    { to: '/report', label: 'Report', activeGradient: 'from-[#F7AD19] to-[#FF8C42]' }
   ];
 
   // Generate user initials for avatar
@@ -45,6 +46,13 @@ export default function Navbar() {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  // Handle View Profile navigation
+  const handleViewProfile = () => {
+    setUserDropdownOpen(false);
+    setMobileMenuOpen(false);
+    navigate('/profile');
   };
 
   return (
@@ -133,16 +141,16 @@ export default function Navbar() {
 
                       {/* Menu Items */}
                       <div className="p-2">
-                        <Link
-                          to="/profile"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        {/* ✅ CHANGED TO BUTTON WITH NAVIGATION */}
+                        <button
+                          onClick={handleViewProfile}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                           View Profile
-                        </Link>
+                        </button>
                         
                         <button
                           onClick={() => {
@@ -190,7 +198,7 @@ export default function Navbar() {
             {/* Mobile User Info */}
             {isAuthenticated && user && (
               <div className="pb-4 mb-4 border-b border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0AD1C8] to-[#429EBD] flex items-center justify-center text-white font-black text-lg">
                     {getUserInitials()}
                   </div>
@@ -203,6 +211,16 @@ export default function Navbar() {
                     </p>
                   </div>
                 </div>
+                {/* ✅ ADDED VIEW PROFILE BUTTON IN MOBILE */}
+                <button
+                  onClick={handleViewProfile}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold uppercase tracking-wide text-[10px] bg-gradient-to-r from-[#0AD1C8] to-[#429EBD] text-white transition-all hover:shadow-lg active:scale-95"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  View Profile
+                </button>
               </div>
             )}
 
