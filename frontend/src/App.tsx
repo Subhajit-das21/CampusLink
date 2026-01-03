@@ -9,9 +9,11 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Switch from './components/Switch';
 import PageTransition from './components/PageTransition';
+import { AuthGuard } from './components/auth/AuthGuard';
 
 // Page Imports
 import Home from './pages/Home';
+import { AuthPage } from './pages/AuthPage';
 import Services from './pages/Services';
 import ServiceDetail from './pages/ServiceDetails';
 import Map from './pages/Map';
@@ -46,25 +48,110 @@ function AnimatedRoutes({ theme, toggleTheme }: { theme: string, toggleTheme: ()
       />
       
       <ToastProvider />
-      <Navbar />
       
-      <div className="fixed bottom-8 left-8 z-[9999]">
-        <Switch isDarkMode={theme === 'dark'} toggleTheme={toggleTheme} />
-      </div>
+      {/* Hide Navbar on Auth page for cleaner experience */}
+      {location.pathname !== '/auth' && <Navbar />}
+      
+      {/* Hide theme switcher on Auth page (or keep it - your choice) */}
+      {location.pathname !== '/auth' && (
+        <div className="fixed bottom-8 left-8 z-[9999]">
+          <Switch isDarkMode={theme === 'dark'} toggleTheme={toggleTheme} />
+        </div>
+      )}
 
+      {/* AnimatePresence with location key for smooth transitions */}
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<PageTransition><Home /></PageTransition>} />
-          <Route path="/services" element={<PageTransition><Services /></PageTransition>} />
-          <Route path="/services/:id" element={<PageTransition><ServiceDetail /></PageTransition>} />
-          <Route path="/map" element={<PageTransition><Map /></PageTransition>} />
-          <Route path="/report" element={<PageTransition><Report /></PageTransition>} />
-          <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
-          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+          
+          {/* Public Routes */}
+          <Route 
+            path="/" 
+            element={
+              <PageTransition>
+                <Home />
+              </PageTransition>
+            } 
+          />
+          
+          <Route 
+            path="/auth" 
+            element={
+              <PageTransition>
+                <AuthPage />
+              </PageTransition>
+            } 
+          />
+          
+          {/* Protected Routes - Wrapped in AuthGuard */}
+          <Route 
+            path="/services" 
+            element={
+              <AuthGuard>
+                <PageTransition>
+                  <Services />
+                </PageTransition>
+              </AuthGuard>
+            } 
+          />
+          
+          <Route 
+            path="/services/:id" 
+            element={
+              <AuthGuard>
+                <PageTransition>
+                  <ServiceDetail />
+                </PageTransition>
+              </AuthGuard>
+            } 
+          />
+          
+          <Route 
+            path="/map" 
+            element={
+              <AuthGuard>
+                <PageTransition>
+                  <Map />
+                </PageTransition>
+              </AuthGuard>
+            } 
+          />
+          
+          <Route 
+            path="/report" 
+            element={
+              <AuthGuard>
+                <PageTransition>
+                  <Report />
+                </PageTransition>
+              </AuthGuard>
+            } 
+          />
+          
+          <Route 
+            path="/profile" 
+            element={
+              <AuthGuard>
+                <PageTransition>
+                  <Profile />
+                </PageTransition>
+              </AuthGuard>
+            } 
+          />
+          
+          {/* 404 Route */}
+          <Route 
+            path="*" 
+            element={
+              <PageTransition>
+                <NotFound />
+              </PageTransition>
+            } 
+          />
         </Routes>
       </AnimatePresence>
 
-      <Footer />
+      {/* Hide Footer on Auth page */}
+      {location.pathname !== '/auth' && <Footer />}
     </div>
   );
 }
