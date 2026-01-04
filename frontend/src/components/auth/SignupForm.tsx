@@ -7,7 +7,7 @@ interface SignupFormProps {
   onSuccess?: (email: string) => void; // ✅ Added this prop
 }
 
-export const SignupForm: React.FC<SignupFormProps> = ({ redirectTo, onSuccess }) => {
+export const SignupForm: React.FC<SignupFormProps> = ({onSuccess }) => {
   const { signup } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
@@ -53,7 +53,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ redirectTo, onSuccess })
 
     try {
       const { confirmPassword, ...signupData } = formData;
-      const result = await signup(signupData, redirectTo);
+      const result = await signup(signupData);
 
       if (result.success) {
         toast.success('Security key dispatched! Check your email.', { id: loadingToast });
