@@ -1,5 +1,3 @@
-import React from 'react';
-
 /**
  * SkeletonCard Component: The Loading Node
  * Provides a low-fidelity preview of Service Nodes during network synchronization.

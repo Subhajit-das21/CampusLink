@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 interface LoginFormProps {
-  redirectTo?: string;
+  redirectTo?: string | undefined;
 }
 
 /**
@@ -44,20 +46,26 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
     
     setIsSubmitting(true);
     
-    // Simulate Network Handshake
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Dummy identity node for local sync
-    const userData = {
-      id: Date.now().toString(),
-      name: formData.email.split('@')[0].toUpperCase(),
-      email: formData.email,
-      rollNumber: '2024CS001',
-      department: 'Computer Science',
-      year: '3rd Year',
-    };
-    
-    login(userData, redirectTo);
+    try {
+      // 🚀 REAL BACKEND HANDSHAKE
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, {
+        identifier: formData.email, // Backend expects 'identifier' for email/rollNumber
+        password: formData.password
+      });
+
+      const { token, user: userData } = response.data;
+
+      // ✅ Now calling login with all 3 required arguments
+      login(userData, token, redirectTo);
+      
+      toast.success(`Access Granted. Welcome, ${userData.username}`);
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Handshake failed';
+      toast.error(message);
+      setErrors({ ...errors, email: 'Authentication failed' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

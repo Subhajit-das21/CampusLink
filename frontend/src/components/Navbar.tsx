@@ -43,8 +43,8 @@ export default function Navbar() {
 
   // Generate identity initials for avatar HUD
   const getUserInitials = () => {
-    if (!user?.name) return 'U';
-    return user.name
+    if (!user?.username) return 'U';
+    return user.username
       .split(' ')
       .map(n => n[0])
       .join('')
@@ -53,8 +53,8 @@ export default function Navbar() {
   };
 
   const getFirstName = () => {
-    if (!user?.name) return 'User';
-    return user.name.split(' ')[0];
+    if (!user?.username) return 'User';
+    return user.username.split(' ')[0];
   };
 
   const handleViewProfile = () => {
@@ -105,7 +105,7 @@ export default function Navbar() {
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                     className="group flex items-center justify-start w-[45px] h-[45px] rounded-full cursor-pointer relative overflow-hidden transition-all duration-300 shadow-[2px_2px_10px_rgba(0,0,0,0.1)] bg-gradient-to-r from-[#0AD1C8] to-[#429EBD] hover:w-[160px] hover:rounded-[40px] active:translate-x-[2px] active:translate-y-[2px]"
-                    title={user?.name || 'User Profile'}
+                    title={user?.username || 'User Profile'}
                   >
                     <div className="w-full h-full transition-all duration-300 flex items-center justify-center group-hover:w-[30%] group-hover:pl-5">
                       <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-black text-sm border-2 border-white/40">
@@ -127,7 +127,7 @@ export default function Navbar() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-bold text-sm text-slate-900 dark:text-white truncate uppercase italic">
-                              {user?.name}
+                              {user?.username}
                             </p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                               {user?.email}
@@ -201,7 +201,7 @@ export default function Navbar() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-slate-900 dark:text-white truncate uppercase italic">
-                    {user?.name}
+                    {user?.username}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                     {user?.email}

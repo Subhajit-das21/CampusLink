@@ -12,7 +12,7 @@ export const AuthPage: React.FC = () => {
   const location = useLocation();
   
   // Theme state for dynamic glow adjustments
-  const [isDarkMode, setIsDarkMode] = useState(() => 
+  const [, setIsDarkMode] = useState(() => 
     document.documentElement.classList.contains('dark')
   );
 

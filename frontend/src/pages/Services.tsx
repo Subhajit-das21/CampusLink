@@ -14,7 +14,7 @@ export default function Services() {
   const [isVisible, setIsVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dbServices, setDbServices] = useState<Service[]>([]); // Use Type instead of any
-  const [error, setError] = useState('');
+  const [ , setError] = useState('');
 
   // Initialize Map API for ServiceCards to calculate distances
   const { isLoaded } = useJsApiLoader({
