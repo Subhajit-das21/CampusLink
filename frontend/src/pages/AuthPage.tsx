@@ -1,106 +1,112 @@
-// pages/AuthPage.tsx
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { LoginForm } from '../components/auth/LoginForm';
 import { SignupForm } from '../components/auth/SignupForm';
 
 /**
- * AuthPage Component
- * Combined Login/Signup page with tab switching
- * Matches CampusLink's premium design language
+ * AuthPage Component: Central Node for User Access
+ * Optimized for 2026 CampusLink Design Language
  */
 export const AuthPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const location = useLocation();
   
-  // Get the intended destination from navigation state
+  // Theme state for dynamic glow adjustments
+  const [isDarkMode, setIsDarkMode] = useState(() => 
+    document.documentElement.classList.contains('dark')
+  );
+
+  // Sync theme changes to update card transparency levels
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  // Intended destination from navigation state
   const from = (location.state as { from?: string })?.from || '/services';
 
-  // Animated background blobs (similar to Home hero)
+  // Pulse effect synchronization
   useEffect(() => {
-    // Reset animations when tab changes
     const blobs = document.querySelectorAll('.auth-blob');
     blobs.forEach((blob) => {
       blob.classList.remove('animate-pulse');
-      setTimeout(() => blob.classList.add('animate-pulse'), 10);
+      // Force reflow
+      void (blob as HTMLElement).offsetWidth;
+      blob.classList.add('animate-pulse');
     });
   }, [activeTab]);
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-violet-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div className="min-h-screen relative overflow-hidden bg-[#F8FAFC] dark:bg-[#051923] transition-colors duration-500">
       
-      {/* Animated Background Blobs */}
+      {/* Dynamic Background Mesh */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="auth-blob absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-teal-400/30 to-cyan-400/30 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
-        <div className="auth-blob absolute top-1/3 -right-32 w-80 h-80 bg-gradient-to-br from-violet-400/30 to-purple-400/30 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
-        <div className="auth-blob absolute -bottom-32 left-1/4 w-96 h-96 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '2s' }} />
+        <div className="auth-blob absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-[#0AD1C8]/20 to-cyan-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
+        <div className="auth-blob absolute top-1/3 -right-32 w-80 h-80 bg-gradient-to-br from-violet-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '1s' }} />
+        <div className="auth-blob absolute -bottom-32 left-1/4 w-96 h-96 bg-gradient-to-br from-[#F7AD19]/10 to-orange-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '2s' }} />
       </div>
 
-      {/* Main Auth Container */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      {/* Main Auth Terminal */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 animate-reveal">
         <div className="w-full max-w-md">
           
-          {/* Glassmorphism Card */}
-          <div className="relative backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 rounded-[2.5rem] shadow-2xl border border-white/20 dark:border-slate-800/50 overflow-hidden">
+          {/* Glass-Card Controller */}
+          <div className="relative backdrop-blur-3xl bg-white/70 dark:bg-slate-900/40 rounded-[3rem] shadow-2xl border-4 border-white dark:border-white/5 overflow-hidden transition-all duration-500">
             
-            {/* Subtle glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 via-violet-500/10 to-amber-500/10 opacity-50" />
+            {/* Sector Glow Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0AD1C8]/5 via-[#7C3AED]/5 to-[#F7AD19]/5 pointer-events-none" />
             
-            {/* Content Container */}
-            <div className="relative z-10 p-8 sm:p-10">
+            <div className="relative z-10 p-8 sm:p-12">
               
-              {/* Logo/Brand */}
-              <div className="text-center mb-8">
-                <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight bg-gradient-to-r from-teal-500 via-violet-500 to-amber-500 bg-clip-text text-transparent">
+              {/* Brand HUD */}
+              <div className="text-center mb-10">
+                <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter bg-gradient-to-r from-[#0AD1C8] via-[#7C3AED] to-[#F7AD19] bg-clip-text text-transparent italic">
                   CampusLink
                 </h1>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-                  Your campus, connected
+                <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 italic">
+                  Initialize Secure Access
                 </p>
               </div>
 
-              {/* Tab Switcher */}
-              <div className="relative flex gap-2 p-1.5 bg-slate-200/50 dark:bg-slate-800/50 rounded-[1.5rem] mb-8">
+              {/* Tab Selector Hub */}
+              <div className="relative flex gap-2 p-1.5 bg-slate-100/50 dark:bg-black/40 rounded-[1.5rem] mb-10 border border-slate-200 dark:border-white/5">
                 
-                {/* Sliding indicator */}
+                {/* Sliding Node Indicator */}
                 <div
-                  className={`absolute top-1.5 bottom-1.5 w-[calc(50%-0.25rem)] bg-white dark:bg-slate-700 rounded-[1.25rem] shadow-lg transition-transform duration-300 ease-out ${
+                  className={`absolute top-1.5 bottom-1.5 w-[calc(50%-0.25rem)] bg-white dark:bg-slate-800 rounded-[1.25rem] shadow-xl transition-transform duration-500 ease-nexus ${
                     activeTab === 'signup' ? 'translate-x-[calc(100%+0.5rem)]' : 'translate-x-0'
                   }`}
                 />
                 
-                {/* Login Tab */}
                 <button
                   onClick={() => setActiveTab('login')}
-                  className={`relative z-10 flex-1 py-3 text-sm font-bold uppercase tracking-wide rounded-[1.25rem] transition-colors duration-300 ${
-                    activeTab === 'login'
-                      ? 'text-slate-900 dark:text-white'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                  className={`relative z-10 flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-[1.25rem] transition-colors duration-500 ${
+                    activeTab === 'login' ? 'text-slate-900 dark:text-white' : 'text-slate-400'
                   }`}
                 >
                   Login
                 </button>
                 
-                {/* Signup Tab */}
                 <button
                   onClick={() => setActiveTab('signup')}
-                  className={`relative z-10 flex-1 py-3 text-sm font-bold uppercase tracking-wide rounded-[1.25rem] transition-colors duration-300 ${
-                    activeTab === 'signup'
-                      ? 'text-slate-900 dark:text-white'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+                  className={`relative z-10 flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-[1.25rem] transition-colors duration-500 ${
+                    activeTab === 'signup' ? 'text-slate-900 dark:text-white' : 'text-slate-400'
                   }`}
                 >
                   Sign Up
                 </button>
               </div>
 
-              {/* Form Container with Animated Transition */}
-              <div className="relative">
-                <div className={`transition-all duration-300 ${activeTab === 'login' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute inset-0 pointer-events-none'}`}>
+              {/* Form Component Injection */}
+              <div className="relative min-h-[300px]">
+                <div className={`transition-all duration-500 ${activeTab === 'login' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'}`}>
                   {activeTab === 'login' && <LoginForm redirectTo={from} />}
                 </div>
                 
-                <div className={`transition-all duration-300 ${activeTab === 'signup' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 absolute inset-0 pointer-events-none'}`}>
+                <div className={`transition-all duration-500 ${activeTab === 'signup' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'}`}>
                   {activeTab === 'signup' && <SignupForm redirectTo={from} />}
                 </div>
               </div>
@@ -108,17 +114,17 @@ export const AuthPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Back to Home Link */}
-          <div className="text-center mt-6">
-            <a
-              href="/"
-              className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-teal-500 dark:hover:text-teal-400 transition-colors group"
+          {/* Navigation Return */}
+          <div className="text-center mt-8">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-[#0AD1C8] transition-all group italic"
             >
-              <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg className="w-4 h-4 transition-transform group-hover:-translate-x-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path d="M15 19l-7-7 7-7" />
               </svg>
-              Back to Home
-            </a>
+              Abort to Home Node
+            </Link>
           </div>
 
         </div>

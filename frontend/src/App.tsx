@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import LoadingBar from 'react-top-loading-bar';
 
-// Component Imports
+// Component Hub
 import ToastProvider from './components/Toast';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -11,7 +11,7 @@ import Switch from './components/Switch';
 import PageTransition from './components/PageTransition';
 import { AuthGuard } from './components/auth/AuthGuard';
 
-// Page Imports
+// Page Hub
 import Home from './pages/Home';
 import { AuthPage } from './pages/AuthPage';
 import Services from './pages/Services';
@@ -21,26 +21,32 @@ import Report from './pages/Report';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 
+/**
+ * AnimatedRoutes Component: The Kinetic Router Node
+ * Manages route transitions, loading states, and global UI visibility.
+ */
 function AnimatedRoutes({ theme, toggleTheme }: { theme: string, toggleTheme: () => void }) {
   const location = useLocation();
   const [progress, setProgress] = useState(0);
 
-  // Trigger Global Loading Bar on route changes
+  // 1. Global Loading Bar Logic: Synchronized with CampusLink 2026 motion curves
   useEffect(() => {
-    setProgress(40); // Start progress
-    const timer = setTimeout(() => setProgress(100), 300); // Complete progress
+    setProgress(30); 
+    const timer = setTimeout(() => setProgress(100), 400); 
     
     return () => {
       clearTimeout(timer);
-      setProgress(0); // Reset for next transition
+      setProgress(0); 
     };
   }, [location.pathname]);
 
+  // UI Visibility Logic: Hide Global HUD on Auth Page
+  const isAuthPage = location.pathname === '/auth';
+
   return (
-    <div className="min-h-screen bg-campus-light dark:bg-campus-navy transition-colors duration-500 relative">
-      {/* Global Top-Loading Bar matching your Luminous Teal */}
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#051923] transition-colors duration-500 relative overflow-x-hidden">
       <LoadingBar
-        color="#0AD1C8" 
+        color="#0AD1C8" // Luminous Teal
         progress={progress}
         onLoaderFinished={() => setProgress(0)}
         height={3}
@@ -49,128 +55,63 @@ function AnimatedRoutes({ theme, toggleTheme }: { theme: string, toggleTheme: ()
       
       <ToastProvider />
       
-      {/* Hide Navbar on Auth page for cleaner experience */}
-      {location.pathname !== '/auth' && <Navbar />}
+      {!isAuthPage && <Navbar />}
       
-      {/* Hide theme switcher on Auth page (or keep it - your choice) */}
-      {location.pathname !== '/auth' && (
-        <div className="fixed bottom-8 left-8 z-[9999]">
+      {/* Nexus Theme Controller */}
+      {!isAuthPage && (
+        <div className="fixed bottom-8 left-8 z-[9999] hover:scale-110 active:scale-95 transition-transform">
           <Switch isDarkMode={theme === 'dark'} toggleTheme={toggleTheme} />
         </div>
       )}
 
-      {/* AnimatePresence with location key for smooth transitions */}
-      <AnimatePresence mode="wait">
+      {/* Kinetic Routing Engine */}
+      <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname}>
           
-          {/* Public Routes */}
-          <Route 
-            path="/" 
-            element={
-              <PageTransition>
-                <Home />
-              </PageTransition>
-            } 
-          />
+          {/* Public Access Points */}
+          <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+          <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
           
-          <Route 
-            path="/auth" 
-            element={
-              <PageTransition>
-                <AuthPage />
-              </PageTransition>
-            } 
-          />
+          {/* Restricted Network Nodes */}
+          <Route path="/services" element={<AuthGuard><PageTransition><Services /></PageTransition></AuthGuard>} />
+          <Route path="/services/:id" element={<AuthGuard><PageTransition><ServiceDetail /></PageTransition></AuthGuard>} />
+          <Route path="/map" element={<AuthGuard><PageTransition><Map /></PageTransition></AuthGuard>} />
+          <Route path="/report" element={<AuthGuard><PageTransition><Report /></PageTransition></AuthGuard>} />
+          <Route path="/profile" element={<AuthGuard><PageTransition><Profile /></PageTransition></AuthGuard>} />
           
-          {/* Protected Routes - Wrapped in AuthGuard */}
-          <Route 
-            path="/services" 
-            element={
-              <AuthGuard>
-                <PageTransition>
-                  <Services />
-                </PageTransition>
-              </AuthGuard>
-            } 
-          />
-          
-          <Route 
-            path="/services/:id" 
-            element={
-              <AuthGuard>
-                <PageTransition>
-                  <ServiceDetail />
-                </PageTransition>
-              </AuthGuard>
-            } 
-          />
-          
-          <Route 
-            path="/map" 
-            element={
-              <AuthGuard>
-                <PageTransition>
-                  <Map />
-                </PageTransition>
-              </AuthGuard>
-            } 
-          />
-          
-          <Route 
-            path="/report" 
-            element={
-              <AuthGuard>
-                <PageTransition>
-                  <Report />
-                </PageTransition>
-              </AuthGuard>
-            } 
-          />
-          
-          <Route 
-            path="/profile" 
-            element={
-              <AuthGuard>
-                <PageTransition>
-                  <Profile />
-                </PageTransition>
-              </AuthGuard>
-            } 
-          />
-          
-          {/* 404 Route */}
-          <Route 
-            path="*" 
-            element={
-              <PageTransition>
-                <NotFound />
-              </PageTransition>
-            } 
-          />
+          {/* Error Handler */}
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>
 
-      {/* Hide Footer on Auth page */}
-      {location.pathname !== '/auth' && <Footer />}
+      {!isAuthPage && <Footer />}
     </div>
   );
 }
 
 export default function App() {
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  // 2. Identity & Theme Persistence Engine
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved;
+    // Auto-detect system preference if no user override exists
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
 
+  // Apply Theme to DOM root
   useEffect(() => {
+    const root = window.document.documentElement;
     if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  }, []);
 
   return (
     <Router>
