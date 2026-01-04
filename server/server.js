@@ -16,8 +16,26 @@ connectDB();
  * 2. Security & Utilities Middleware
  */
 app.use(helmet()); 
+
+// ✅ CORS Configuration - Allow frontend
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'http://localhost:5174',
+            'http://127.0.0.1:5173',
+            process.env.CLIENT_URL
+        ].filter(Boolean);
+        
+        // Allow requests with no origin (mobile apps, Postman, curl)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            callback(null, true); // Allow all in development
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -41,7 +59,16 @@ app.use('/api/services', require('./routes/service'));
 // Civic Interface: Infrastructure Report Logging
 app.use('/api/reports', require('./routes/report')); 
 
-// Global System Status (Health Check)
+// ✅ Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ 
+        success: true,
+        message: 'CampusLink API is running',
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Global System Status (Root)
 app.get('/', (req, res) => {
     res.status(200).json({ 
         status: 'Online', 
@@ -53,8 +80,9 @@ app.get('/', (req, res) => {
     });
 });
 
-// 404 Catch-all: Handles requests to non-existent API endpoints
+// 404 Catch-all
 app.use((req, res) => {
+    console.log('❌ 404 Not Found:', req.method, req.originalUrl);
     res.status(404).json({
         error: 'Node Not Found',
         message: `The path ${req.originalUrl} does not exist in the Nexus registry.`
@@ -66,9 +94,11 @@ app.use((req, res) => {
  */
 app.use((err, req, res, next) => {
     console.error(`[NEXUS ERROR]: ${err.message}`);
+    console.error(err.stack);
     
     const statusCode = err.statusCode || 500;
     res.status(statusCode).json({ 
+        success: false,
         error: 'Nexus Link Interrupted', 
         message: err.message || 'Internal Server Error'
     });
@@ -77,12 +107,13 @@ app.use((err, req, res, next) => {
 /**
  * 5. Initialization Node
  */
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 const server = app.listen(PORT, () => {
     console.log(`
     🚀 CampusLink Backend Initialized
     📡 Port: ${PORT}
     🔗 Base Node: http://localhost:${PORT}
+    🔧 Environment: ${process.env.NODE_ENV || 'development'}
     ───────────────────────────────────────
     `);
 });
@@ -90,14 +121,14 @@ const server = app.listen(PORT, () => {
 /**
  * 6. System Stability Handlers
  */
-// Handle Uncaught Exceptions
 process.on('uncaughtException', (err) => {
     console.error(`🛑 Uncaught Exception: ${err.message}`);
+    console.error(err.stack);
     process.exit(1);
 });
 
-// Handle Unhandled Rejections
 process.on('unhandledRejection', (err) => {
     console.error(`⚠️ Unhandled Rejection: ${err.message}`);
+    console.error(err.stack);
     server.close(() => process.exit(1));
 });

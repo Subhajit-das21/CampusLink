@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { LoginForm } from '../components/auth/LoginForm';
 import { SignupForm } from '../components/auth/SignupForm';
+import { OTPVerification } from '../components/auth/OTPVerification';
 
 /**
  * AuthPage Component: Central Node for User Access
@@ -9,7 +10,10 @@ import { SignupForm } from '../components/auth/SignupForm';
  */
 export const AuthPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
+  const [showOTPScreen, setShowOTPScreen] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Theme state for dynamic glow adjustments
   const [, setIsDarkMode] = useState(() => 
@@ -28,6 +32,23 @@ export const AuthPage: React.FC = () => {
   // Intended destination from navigation state
   const from = (location.state as { from?: string })?.from || '/services';
 
+  // Handle successful signup - show OTP screen
+  const handleSignupSuccess = (email: string) => {
+    setRegisteredEmail(email);
+    setShowOTPScreen(true);
+  };
+
+  // Handle successful OTP verification
+  const handleOTPSuccess = () => {
+    navigate(from, { replace: true });
+  };
+
+  // Handle back from OTP screen
+  const handleBackFromOTP = () => {
+    setShowOTPScreen(false);
+    setRegisteredEmail('');
+  };
+
   // Pulse effect synchronization
   useEffect(() => {
     const blobs = document.querySelectorAll('.auth-blob');
@@ -37,7 +58,7 @@ export const AuthPage: React.FC = () => {
       void (blob as HTMLElement).offsetWidth;
       blob.classList.add('animate-pulse');
     });
-  }, [activeTab]);
+  }, [activeTab, showOTPScreen]);
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#F8FAFC] dark:bg-[#051923] transition-colors duration-500">
@@ -67,65 +88,78 @@ export const AuthPage: React.FC = () => {
                   CampusLink
                 </h1>
                 <p className="mt-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500 italic">
-                  Initialize Secure Access
+                  {showOTPScreen ? 'Verify Identity' : 'Initialize Secure Access'}
                 </p>
               </div>
 
-              {/* Tab Selector Hub */}
-              <div className="relative flex gap-2 p-1.5 bg-slate-100/50 dark:bg-black/40 rounded-[1.5rem] mb-10 border border-slate-200 dark:border-white/5">
-                
-                {/* Sliding Node Indicator */}
-                <div
-                  className={`absolute top-1.5 bottom-1.5 w-[calc(50%-0.25rem)] bg-white dark:bg-slate-800 rounded-[1.25rem] shadow-xl transition-transform duration-500 ease-nexus ${
-                    activeTab === 'signup' ? 'translate-x-[calc(100%+0.5rem)]' : 'translate-x-0'
-                  }`}
+              {/* Conditional Rendering: OTP Screen vs Auth Forms */}
+              {showOTPScreen ? (
+                <OTPVerification 
+                  email={registeredEmail}
+                  onSuccess={handleOTPSuccess}
+                  onBack={handleBackFromOTP}
                 />
-                
-                <button
-                  onClick={() => setActiveTab('login')}
-                  className={`relative z-10 flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-[1.25rem] transition-colors duration-500 ${
-                    activeTab === 'login' ? 'text-slate-900 dark:text-white' : 'text-slate-400'
-                  }`}
-                >
-                  Login
-                </button>
-                
-                <button
-                  onClick={() => setActiveTab('signup')}
-                  className={`relative z-10 flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-[1.25rem] transition-colors duration-500 ${
-                    activeTab === 'signup' ? 'text-slate-900 dark:text-white' : 'text-slate-400'
-                  }`}
-                >
-                  Sign Up
-                </button>
-              </div>
+              ) : (
+                <>
+                  {/* Tab Selector Hub */}
+                  <div className="relative flex gap-2 p-1.5 bg-slate-100/50 dark:bg-black/40 rounded-[1.5rem] mb-10 border border-slate-200 dark:border-white/5">
+                    
+                    {/* Sliding Node Indicator */}
+                    <div
+                      className={`absolute top-1.5 bottom-1.5 w-[calc(50%-0.25rem)] bg-white dark:bg-slate-800 rounded-[1.25rem] shadow-xl transition-transform duration-500 ease-nexus ${
+                        activeTab === 'signup' ? 'translate-x-[calc(100%+0.5rem)]' : 'translate-x-0'
+                      }`}
+                    />
+                    
+                    <button
+                      onClick={() => setActiveTab('login')}
+                      className={`relative z-10 flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-[1.25rem] transition-colors duration-500 ${
+                        activeTab === 'login' ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+                      }`}
+                    >
+                      Login
+                    </button>
+                    
+                    <button
+                      onClick={() => setActiveTab('signup')}
+                      className={`relative z-10 flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-[1.25rem] transition-colors duration-500 ${
+                        activeTab === 'signup' ? 'text-slate-900 dark:text-white' : 'text-slate-400'
+                      }`}
+                    >
+                      Sign Up
+                    </button>
+                  </div>
 
-              {/* Form Component Injection */}
-              <div className="relative min-h-[300px]">
-                <div className={`transition-all duration-500 ${activeTab === 'login' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'}`}>
-                  {activeTab === 'login' && <LoginForm redirectTo={from} />}
-                </div>
-                
-                <div className={`transition-all duration-500 ${activeTab === 'signup' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'}`}>
-                  {activeTab === 'signup' && <SignupForm redirectTo={from} />}
-                </div>
-              </div>
+                  {/* Form Component Injection */}
+                  <div className="relative min-h-[300px]">
+                    <div className={`transition-all duration-500 ${activeTab === 'login' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'}`}>
+                      {activeTab === 'login' && <LoginForm redirectTo={from} />}
+                    </div>
+                    
+                    <div className={`transition-all duration-500 ${activeTab === 'signup' ? 'opacity-100 scale-100' : 'opacity-0 scale-95 absolute inset-0 pointer-events-none'}`}>
+                      {activeTab === 'signup' && <SignupForm redirectTo={from} onSuccess={handleSignupSuccess} />}
+                    </div>
+                  </div>
+                </>
+              )}
 
             </div>
           </div>
 
           {/* Navigation Return */}
-          <div className="text-center mt-8">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-[#0AD1C8] transition-all group italic"
-            >
-              <svg className="w-4 h-4 transition-transform group-hover:-translate-x-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                <path d="M15 19l-7-7 7-7" />
-              </svg>
-              Abort to Home Node
-            </Link>
-          </div>
+          {!showOTPScreen && (
+            <div className="text-center mt-8">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-[#0AD1C8] transition-all group italic"
+              >
+                <svg className="w-4 h-4 transition-transform group-hover:-translate-x-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path d="M15 19l-7-7 7-7" />
+                </svg>
+                Abort to Home Node
+              </Link>
+            </div>
+          )}
 
         </div>
       </div>

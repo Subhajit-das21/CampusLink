@@ -32,20 +32,38 @@ const sendOTPEmail = async (email, otp) => {
 
 /**
  * @desc    Register a new Identity Node
- * @route   POST /api/auth/register
+ * @route   POST /api/auth/register (or /api/auth/signup)
  */
 exports.register = async (req, res) => {
-  const { username, email, password, rollNumber, department } = req.body;
+  // ✅ Accept both 'name' and 'username' from frontend
+  const { name, username, email, password, rollNumber, department } = req.body;
+  
+  // ✅ Use 'name' if provided, otherwise fall back to 'username'
+  const finalUsername = name || username;
+  
+  console.log('📝 Registration attempt:', { finalUsername, email, rollNumber, department });
+  
   try {
+    // ✅ Validation with better error message
+    if (!finalUsername || !email || !password || !rollNumber || !department) {
+      return res.status(400).json({ 
+        error: 'Validation Error', 
+        message: 'All fields are required (name, email, password, rollNumber, department)' 
+      });
+    }
+
     // Check for existing identity
     const existingUser = await User.findOne({ $or: [{ email }, { rollNumber }] });
     if (existingUser) {
-      return res.status(400).json({ error: 'Conflict', message: 'Identity or Roll Number already registered.' });
+      return res.status(400).json({ 
+        error: 'Conflict', 
+        message: 'Identity or Roll Number already registered.' 
+      });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const user = new User({ 
-      username, 
+      username: finalUsername,  // ✅ Use the finalUsername variable
       email, 
       password, 
       rollNumber, 
@@ -55,11 +73,31 @@ exports.register = async (req, res) => {
     });
     
     await user.save();
-    await sendOTPEmail(email, otp);
     
-    res.status(201).json({ message: 'Security key dispatched to campus email.' });
+    console.log('✅ User created:', user._id);
+    
+    // ✅ Try to send OTP email, but don't fail registration if email fails
+    try {
+      await sendOTPEmail(email, otp);
+      console.log('📧 OTP email sent to:', email);
+    } catch (emailError) {
+      console.error('⚠️ Email sending failed:', emailError.message);
+      // Continue anyway - user is created
+    }
+    
+    res.status(201).json({ 
+      success: true,
+      message: 'Security key dispatched to campus email.',
+      // ✅ For development: include OTP in response (remove in production!)
+      ...(process.env.NODE_ENV === 'development' && { otp })
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Initialization Failed', message: error.message });
+    console.error('❌ Registration error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Initialization Failed', 
+      message: error.message 
+    });
   }
 };
 
@@ -73,7 +111,10 @@ exports.verifyOTP = async (req, res) => {
     const user = await User.findOne({ email }).select('+otp +otpExpires');
     
     if (!user || user.otp !== otp || user.otpExpires < Date.now()) {
-      return res.status(400).json({ error: 'Invalid Key', message: 'Key expired or incorrect.' });
+      return res.status(400).json({ 
+        error: 'Invalid Key', 
+        message: 'Key expired or incorrect.' 
+      });
     }
 
     user.isVerified = true;
@@ -81,9 +122,29 @@ exports.verifyOTP = async (req, res) => {
     user.otpExpires = undefined;
     await user.save();
 
-    res.status(200).json({ status: 'Verified', message: 'Account node successfully linked.' });
+    // ✅ Generate token after verification
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.status(200).json({ 
+      success: true,
+      status: 'Verified', 
+      message: 'Account node successfully linked.',
+      token,
+      user: {
+        id: user._id,
+        name: user.username,
+        email: user.email,
+        rollNumber: user.rollNumber,
+        department: user.department
+      }
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Verification Failure', message: error.message });
+    console.error('❌ Verification error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Verification Failure', 
+      message: error.message 
+    });
   }
 };
 
@@ -92,35 +153,64 @@ exports.verifyOTP = async (req, res) => {
  * @route   POST /api/auth/login
  */
 exports.login = async (req, res) => {
-  const { identifier, password } = req.body; // Identifier can be email or rollNumber
+  // ✅ Accept both formats: {email, password} or {identifier, password}
+  const { identifier, email, password } = req.body;
+  const loginIdentifier = identifier || email;
+  
+  console.log('🔐 Login attempt:', loginIdentifier);
+  
   try {
+    if (!loginIdentifier || !password) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Validation Error', 
+        message: 'Email and password are required' 
+      });
+    }
+
     const user = await User.findOne({ 
-      $or: [{ email: identifier }, { rollNumber: identifier }] 
+      $or: [{ email: loginIdentifier }, { rollNumber: loginIdentifier }] 
     }).select('+password');
 
     if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ error: 'Authentication Failed', message: 'Invalid credentials.' });
+      return res.status(401).json({ 
+        success: false,
+        error: 'Authentication Failed', 
+        message: 'Invalid credentials.' 
+      });
     }
 
     if (!user.isVerified) {
-      return res.status(401).json({ error: 'Unverified', message: 'Please verify your campus email first.' });
+      return res.status(401).json({ 
+        success: false,
+        error: 'Unverified', 
+        message: 'Please verify your campus email first.' 
+      });
     }
 
     // Generate JWT Node Access Token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
+    console.log('✅ Login successful:', user._id);
+
     res.status(200).json({ 
+      success: true,
       token, 
       user: { 
         id: user._id,
-        username: user.username, 
+        name: user.username,
         email: user.email,
         rollNumber: user.rollNumber,
         department: user.department
       } 
     });
   } catch (error) {
-    res.status(500).json({ error: 'Login Link Failure', message: error.message });
+    console.error('❌ Login error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Login Link Failure', 
+      message: error.message 
+    });
   }
 };
 
@@ -131,8 +221,16 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     // req.user is already provided by the 'protect' middleware
-    res.status(200).json(req.user);
+    res.status(200).json({
+      success: true,
+      user: req.user
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Telemetry Failure', message: error.message });
+    console.error('❌ GetMe error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Telemetry Failure', 
+      message: error.message 
+    });
   }
 };

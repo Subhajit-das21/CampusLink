@@ -9,11 +9,12 @@ const {
 const { protect } = require('../middleware/authMiddleware.js');
 
 /**
- * @route   POST /api/auth/register
+ * @route   POST /api/auth/register (or /api/auth/signup)
  * @desc    Initialize a new Identity Node (Sends OTP to campus email)
  * @access  Public
  */
 router.post('/register', register);
+router.post('/signup', register);  // ✅ Added for frontend compatibility
 
 /**
  * @route   POST /api/auth/verify

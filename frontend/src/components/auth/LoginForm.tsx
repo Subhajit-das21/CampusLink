@@ -1,16 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
-import axios from 'axios';
 
 interface LoginFormProps {
   redirectTo?: string | undefined;
 }
 
-/**
- * LoginForm Component: Secure Access Node
- * Synchronized with CampusLink 2026 Design Language
- */
 export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
   const { login } = useAuth();
   const [formData, setFormData] = useState({
@@ -20,7 +15,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Client-side Validation Logic
   const validateForm = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
     
@@ -45,23 +39,27 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
     if (!validateForm()) return;
     
     setIsSubmitting(true);
-    
+    const loadingToast = toast.loading('Initializing Access...');
+
     try {
-      // 🚀 REAL BACKEND HANDSHAKE
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, {
-        identifier: formData.email, // Backend expects 'identifier' for email/rollNumber
-        password: formData.password
-      });
+      // Call login with correct parameters
+      const result = await login(
+        {
+          email: formData.email,
+          password: formData.password
+        },
+        redirectTo
+      );
 
-      const { token, user: userData } = response.data;
-
-      // ✅ Now calling login with all 3 required arguments
-      login(userData, token, redirectTo);
-      
-      toast.success(`Access Granted. Welcome, ${userData.username}`);
+      if (result.success) {
+        toast.success('Access Granted!', { id: loadingToast });
+      } else {
+        toast.error(result.error || 'Authentication failed', { id: loadingToast });
+        setErrors({ ...errors, email: 'Authentication failed' });
+      }
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Handshake failed';
-      toast.error(message);
+      const message = err.message || 'Handshake failed';
+      toast.error(message, { id: loadingToast });
       setErrors({ ...errors, email: 'Authentication failed' });
     } finally {
       setIsSubmitting(false);
@@ -81,11 +79,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
           type="email"
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          disabled={isSubmitting}
           className={`w-full px-5 py-4 rounded-2xl bg-white/50 dark:bg-black/20 border-2 ${
             errors.email 
               ? 'border-red-500/50 dark:border-red-500/30' 
               : 'border-slate-100 dark:border-white/5'
-          } focus:border-[#0AD1C8] dark:focus:border-[#0AD1C8] focus:outline-none transition-all text-slate-900 dark:text-white placeholder:text-slate-400/50 font-bold`}
+          } focus:border-[#0AD1C8] dark:focus:border-[#0AD1C8] focus:outline-none transition-all text-slate-900 dark:text-white placeholder:text-slate-400/50 font-bold disabled:opacity-50`}
           placeholder="id@campus.edu"
         />
         {errors.email && (
@@ -103,11 +102,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
           type="password"
           value={formData.password}
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          disabled={isSubmitting}
           className={`w-full px-5 py-4 rounded-2xl bg-white/50 dark:bg-black/20 border-2 ${
             errors.password 
               ? 'border-red-500/50 dark:border-red-500/30' 
               : 'border-slate-100 dark:border-white/5'
-          } focus:border-[#0AD1C8] dark:focus:border-[#0AD1C8] focus:outline-none transition-all text-slate-900 dark:text-white placeholder:text-slate-400/50 font-bold`}
+          } focus:border-[#0AD1C8] dark:focus:border-[#0AD1C8] focus:outline-none transition-all text-slate-900 dark:text-white placeholder:text-slate-400/50 font-bold disabled:opacity-50`}
           placeholder="••••••••"
         />
         {errors.password && (
@@ -128,7 +128,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ redirectTo }) => {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-full relative group overflow-hidden rounded-2xl bg-gradient-to-r from-[#0AD1C8] via-[#7C3AED] to-[#F7AD19] p-[2px] transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+        className="w-full relative group overflow-hidden rounded-2xl bg-gradient-to-r from-[#0AD1C8] via-[#7C3AED] to-[#F7AD19] p-[2px] transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <div className="relative px-6 py-4 rounded-[14px] bg-white dark:bg-[#051923] transition-colors group-hover:bg-transparent">
           <span className={`block font-black uppercase tracking-[0.3em] text-xs transition-colors ${
