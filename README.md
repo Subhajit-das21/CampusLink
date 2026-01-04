@@ -4,6 +4,26 @@ CampusLink is a student-centric web platform designed to connect college campuse
 
 ---
 
+## 📸 Screenshots
+
+### Services Discovery
+<p align="center">
+  <img src="./screenshots/services.jpeg" width="800" />
+</p>
+
+### Interactive Map
+<p align="center">
+  <img src="./screenshots/map.jpeg" width="800" />
+</p>
+
+
+### Report an Issue
+<p align="center">
+  <img src="./screenshots/reports.jpeg" width="800" />
+</p>
+
+---
+
 ## ✨ Features
 
 - **Public Landing Page**  
