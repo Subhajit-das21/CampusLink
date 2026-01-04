@@ -37,13 +37,13 @@ export default function Profile() {
   }, []);
 
   const getUserInitials = () => {
-    if (!user?.username) return 'U';
-    return user.username.slice(0, 2).toUpperCase();
+    if (!user?.name) return 'U';
+    return user.name.slice(0, 2).toUpperCase();
   };
 
   const getFirstName = () => {
-    if (!user?.username) return 'Student';
-    return user.username.split(' ')[0];
+    if (!user?.name) return 'Student';
+    return user.name.split(' ')[0];
   };
 
   // Metrics Calculation
@@ -86,7 +86,7 @@ export default function Profile() {
                   {getUserInitials()}
                 </div>
                 <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight mb-1">
-                  {user?.username || 'Verified Student'}
+                  {user?.name || 'Verified Student'}
                 </h2>
                 
                 {/* Contact Data */}

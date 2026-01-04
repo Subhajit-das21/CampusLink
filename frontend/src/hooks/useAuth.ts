@@ -99,7 +99,7 @@ export const useAuth = () => {
   };
 
   // ✅ Modified: Signup now only registers, doesn't auto-login
-  const signup = async (userData: SignupData, redirectTo?: string): Promise<AuthResult> => {
+  const signup = async (userData: SignupData): Promise<AuthResult> => {
     setLoading(true);
     setError(null);
 
@@ -122,7 +122,7 @@ export const useAuth = () => {
       }
 
       const data = await response.json();
-      console.log('✅ Signup successful - OTP sent to email');
+      console.log('✅ Signup successful - OTP sent to email', data);
 
       // ✅ DON'T store token or user yet - wait for OTP verification
       // localStorage.setItem(TOKEN_KEY, data.token);
